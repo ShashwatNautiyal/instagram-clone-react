@@ -1,25 +1,43 @@
-import logo from './logo.svg';
+import { useState, useEffect } from 'react';
 import './App.css';
+import Header from './components/Header';
+import Posts from './components/Posts';
+import { db } from './firebase';
+import ImageUpload from './components/ImageUpload';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+	const [posts, setPosts] = useState([]);
+	const [username, setUsername] = useState('');
+
+	console.log(username);
+
+	const usernameSet = (e) => {
+		setUsername(e.target.value);
+	};
+
+	useEffect(() => {
+		db.collection('posts')
+			.orderBy('timestamp', 'desc')
+			.onSnapshot((snapshot) => {
+				setPosts(snapshot.docs.map((doc) => ({ id: doc.id, post: doc.data() })));
+			});
+	}, []);
+
+	return (
+		<div className="App">
+			<Header username={username} setUsername={setUsername} usernameSet={usernameSet} />
+			{posts.map(({ id, post }) => (
+				<Posts
+					key={id}
+					postId={id}
+					caption={post.caption}
+					imgUrl={post.imgUrl}
+					username={post.username}
+				/>
+			))}
+			<ImageUpload username={username} />
+		</div>
+	);
 }
 
 export default App;
